@@ -14,7 +14,7 @@ engine = create_engine("sqlite:///Resources/hawaii.sqlite")
 Base = automap_base()
 
 # reflect the tables
-Base.prepare(engine, reflect = True)
+Base.prepare(engine)
 
 # Save references to each table
 Measurement = Base.classes.measurement
@@ -69,26 +69,18 @@ def precipitation():
 #station route
 @app.route("/api/v1.0/stations")
 def stations():
-    
+
     # Create our session (link) from Python to the DB
     session = Session(engine)
 
-    """Return a list of all Stations"""
+    """Return a list of all Station Data"""
     # Query all Stations
-    station_results = session.query(Station.station).\
-                 order_by(Station.station).all()
+    stations = session.query(Station.name, Station.station).all()
 
-    session.close()
+    # convert list to dictionary
+    stations_dict = dict(stations)
 
-    # Convert list to dict
-    stations_values = []
-    for station, id in station_results:
-        stations_values_dict = {}
-        stations_values_dict['station'] = station
-        stations_values_dict['id'] = id
-        stations_values.append(stations_values_dict)
-
-    return jsonify(stations_values)
+    return jsonify(stations_dict)
 
 
 #tobs route
@@ -153,7 +145,8 @@ def Start_end_date(start_date, end_date):
     """Return a list of min, avg and max tobs for start and end dates"""
     # Query all tobs
     results = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
-                filter(Measurement.date >= start_date).filter(Measurement.date <= end_date).all()
+                filter(Measurement.date >= start_date).\
+                filter(Measurement.date <= end_date).all()
 
     session.close()
   
